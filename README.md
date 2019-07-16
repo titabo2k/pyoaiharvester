@@ -9,13 +9,13 @@ Usage
 Harvest a repository to a file named untsw.dc.xml
 
 ```
-python pyoaiharvest.py -l http://digital.library.unt.edu/explore/collections/UNTSW/oai/ -o untsw.dc.xml
+python pyoaiharvest.py -uri http://digital.library.unt.edu/explore/collections/UNTSW/oai/ -o untsw.dc.xml
 ```
 
 Harvest the untl metadata format to a file named untsw.untl.xml
 
 ```
-python pyoaiharvest.py -l http://digital.library.unt.edu/explore/collections/UNTSW/oai/ -o untsw.untl.xml -m untl
+python pyoaiharvest.py -uri http://digital.library.unt.edu/explore/collections/UNTSW/oai/ -o untsw.untl.xml -m untl
 ```
 
 Options
@@ -25,9 +25,9 @@ Options
 **--from**  
 &nbsp;&nbsp;&nbsp;&nbsp; harvest records from this date, format: yyyy-mm-dd  
 
-**-l**  
-**--link**  
-&nbsp;&nbsp;&nbsp;&nbsp; URL of repository  
+**-uri**  
+**--baseURI**  
+&nbsp;&nbsp;&nbsp;&nbsp; base URI of the repository  
 
 **-m**  
 **--mdprefix**  
@@ -43,4 +43,7 @@ Options
 
 **-u**  
 **--until**  
-&nbsp;&nbsp;&nbsp;&nbsp; harvest records until this date, format: yyyy-mm-dd  
+&nbsp;&nbsp;&nbsp;&nbsp; harvest records until this date, format: yyyy-mm-dd
+
+**--lexBASE**
+&nbsp;&nbsp;&nbsp;&nbsp; base relatet url escaping for '=()&:+'
