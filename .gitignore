@@ -29,3 +29,4 @@ pip-log.txt
 # pipenv
 .venv/*
 Pipfile
+Pipfile.lock
