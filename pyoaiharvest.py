@@ -2,12 +2,81 @@ import urllib.request
 import urllib.parse
 import zlib
 import time
-import re
-import xml.dom.pulldom
 import argparse
 import logging
+from lxml import etree
 
 nDataBytes, nRawBytes, nRecoveries, maxRecoveries = 0, 0, 0, 3
+
+nameSpaces = {
+    'oai': 'http://www.openarchives.org/OAI/2.0/',
+    'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+}
+
+xpaths = {                                                                                                                                    
+    'res_token_xpath': '//oai:resumptionToken', 
+    'oai_error_code_xpath': '//oai:error/@code',
+    'oai_error_val_xpath': '//oai:error[@code="{}"]',
+    'record_xpath': '//oai:record',                                                                                            
+}
+
+def parseData(remoteAddr, remoteData, nameSpaces, xpaths):
+    doc = etree.XML(remoteData)
+
+    oaiErrorCode = ''
+    oaiErrorVal = ''
+    
+    try:
+        oaiErrorCode = doc.xpath(
+            xpaths['oai_error_code_xpath'],
+            namespaces=nameSpaces)[0]
+    except IndexError as noOAIErrorCode:
+        pass
+    
+    if oaiErrorCode:
+        oai_error_val_xpath = xpaths['oai_error_val_xpath'].format(
+            oaiErrorCode,
+        )
+
+        try:
+            oaiErrorVal = doc.xpath(
+                oai_error_val_xpath,
+                namespaces=nameSpaces)[0].text
+        except IndexError as noOAIErrorVal:
+            pass
+
+        logging.fatal("oai error {0}: {1}".format(
+            oaiErrorCode,
+            oaiErrorVal,
+        ))
+
+        raise Exception("oai error {0}: {1}".format(
+            oaiErrorCode,
+            oaiErrorVal,
+        ))
+
+    records = ''
+    resToken = ''
+
+    if not oaiErrorCode:
+        try:
+            records = doc.xpath(
+                xpaths['record_xpath'],
+                namespaces=nameSpaces)
+        except IndexError as noRecords:
+            pass
+
+        try:
+            resToken = doc.xpath(
+                xpaths['res_token_xpath'], 
+                namespaces=nameSpaces)[0].text
+        except IndexError as noResToken:
+            logging.info("no resumption token found for {0}".format(
+                remoteAddr))
+            pass
+
+    if records or resToken:
+        return records, resToken
 
 
 def getData(serverString, command, lexBASE, verbose=1, sleepTime=0):
@@ -16,7 +85,12 @@ def getData(serverString, command, lexBASE, verbose=1, sleepTime=0):
         time.sleep(sleepTime)
 
     if lexBASE:
-        command = urllib.parse.quote(command, safe=lexBASE, encoding=None, errors=None)
+        command = urllib.parse.quote(
+            command, 
+            safe=lexBASE, 
+            encoding=None, 
+            errors=None,
+        )
 
     remoteAddr = serverString + '?verb=%s' % command
     
@@ -47,17 +121,11 @@ def getData(serverString, command, lexBASE, verbose=1, sleepTime=0):
         pass
     
     nDataBytes += len(remoteData)
-    
-    mo = re.search('<error *code=\"([^"]*)">(.*)</error>', remoteData)
 
-    eRT = re.search('<ListRecords/>', remoteData)
-    
-    if mo:
-        logging.warn("OAIERROR: code={0} '{1}'".format(mo.group(1), mo.group(2)))
-    if eRT and lexBASE:
-        logging.info("base repo empty records list")
-    else:
-        return remoteData
+    records, resToken = parseData(remoteAddr, remoteData, nameSpaces, xpaths)
+
+    return records, resToken
+
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -136,9 +204,7 @@ if __name__ == "__main__":
 
     ofile = open(outFileName,"w")
 
-    ofile.write('<repository xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" \
-     xmlns:dc="http://purl.org/dc/elements/1.1/" \
-     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n')  # wrap list of records with this
+    ofile.write('<repository>\n')  # wrap list of records with this
 
     if oaiSet:
         verbOpts += '&set=%s' % oaiSet
@@ -149,24 +215,35 @@ if __name__ == "__main__":
     if mdPrefix:
         verbOpts += '&metadataPrefix=%s' % mdPrefix
 
-    data = getData(serverString, 'ListRecords' + verbOpts, lexBASE)
-
+    hasToken = True
+    curResToken = ''
     recordCount = 0
 
-    while data:
-        events = xml.dom.pulldom.parseString(data)
-        for (event, node) in events:
-            if event == "START_ELEMENT" and node.tagName == 'record':
-                events.expandNode(node)
-                node.writexml(ofile)
-                recordCount += 1
-        mo = re.search('<resumptionToken[^>]*>(.*)</resumptionToken>', data)
-        if not mo:
-            break
-        
-        data = getData(serverString, "ListRecords&resumptionToken=%s" % mo.group(1), lexBASE)
+    while hasToken:
+        resToken = ''
+        records = ''
+        if curResToken:
+            try:
+                records, resToken = getData(
+                    serverString, 
+                    "ListRecords&resumptionToken=%s" % curResToken, 
+                    lexBASE)
+                curResToken = resToken
+            except TypeError:
+                hasToken = False
+                pass
+        else:
+            try:
+                records, resToken = getData(serverString, 'ListRecords' + verbOpts, lexBASE)
+            except TypeError:
+                pass
+            curResToken = resToken
 
-    ofile.write('\n</repository>\n'), ofile.close()
+        for rec in records:
+            ofile.write(etree.tostring(rec, encoding='unicode'))
+            recordCount += 1
+
+    ofile.write('</repository>\n'), ofile.close()
 
     logging.info("Read {:d} bytes ({:.2f} compression)".format(
         nDataBytes,
