@@ -29,13 +29,25 @@ Options
 **--baseURI**  
 &nbsp;&nbsp;&nbsp;&nbsp; base URI of the repository  
 
+**-dir**  
+**--targetDir**  
+&nbsp;&nbsp;&nbsp;&nbsp; target dir
+
+**-max**  
+**--maxRecNum**  
+&nbsp;&nbsp;&nbsp;&nbsp; max num of records per file
+
+**-rn**  
+**--rootNode**  
+&nbsp;&nbsp;&nbsp;&nbsp; root node to wrap the harvested oai records
+
+**-fn**  
+**--fileBaseName**  
+&nbsp;&nbsp;&nbsp;&nbsp; base name of the target files 
+
 **-m**  
 **--mdprefix**  
-&nbsp;&nbsp;&nbsp;&nbsp; use the specified metadata format, default="oai_dc"  
-
-**-o**  
-**--filename**  
-&nbsp;&nbsp;&nbsp;&nbsp; write repository to file  
+&nbsp;&nbsp;&nbsp;&nbsp; use the specified metadata format, default="oai_dc"   
 
 **-s**  
 **--setName**  
