@@ -20,6 +20,14 @@ xpaths = {
     'record_xpath': '//oai:record',                                                                                            
 }
 
+def provideFileHandle(targetDir, fileNum, outFileName):
+    fullPath = "{0}/{1}_{2}".format(targetDir, fileNum, outFileName)
+
+    outFile = open(fullPath,"w")
+
+    return outFile
+
+
 def parseData(remoteAddr, remoteData, nameSpaces, xpaths):
     doc = etree.XML(remoteData)
 
@@ -142,10 +150,29 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument(
-        "-o", 
-        "--filename", 
-        help="write repository to file",
+        "-dir", 
+        "--targetDir", 
+        help="target dir",
         required=True,
+    )
+    parser.add_argument(
+        "-fn", 
+        "--fileBaseName", 
+        help="base name of the target files",
+        required=True,
+    )
+    parser.add_argument(
+        "-max", 
+        "--maxRecNum", 
+        type=int,
+        default=10000, 
+        help="max num of records per file",
+    )
+    parser.add_argument(
+        "-rn", 
+        "--rootNode", 
+        default="repository", 
+        help="root node to wrap the harvested oai records",
     )
     parser.add_argument(
         "-f", 
@@ -179,32 +206,20 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args:
-        serverString = verbOpts = fromDate = untilDate = mdPrefix = oaiSet = lexBASE = ''
-        if args.baseURI:
-            serverString = args.baseURI
-        if args.filename:
-            outFileName = args.filename
-        if args.fromDate:
-            fromDate = args.fromDate
-        if args.until:
-            untilDate = args.until
-        if args.mdprefix:
-            mdPrefix = args.mdprefix
-        if args.setName:
-            oaiSet = args.setName
-        if args.lexBASE:    
-            lexBASE = args.lexBASE
+        serverString = args.baseURI
+        targetDir = args.targetDir
+        outFileName = args.fileBaseName
+        maxRecNum = args.maxRecNum
+        rootNode = args.rootNode
+        fromDate = args.fromDate
+        untilDate = args.until
+        mdPrefix = args.mdprefix
+        oaiSet = args.setName
+        lexBASE = args.lexBASE
     else:
         print(usage)
 
-    logging.info("Writing records to {0} from archive {1}".format(
-        outFileName,
-        serverString,
-    ))
-
-    ofile = open(outFileName,"w")
-
-    ofile.write('<repository>\n')  # wrap list of records with this
+    verbOpts = ''
 
     if oaiSet:
         verbOpts += '&set=%s' % oaiSet
@@ -215,9 +230,17 @@ if __name__ == "__main__":
     if mdPrefix:
         verbOpts += '&metadataPrefix=%s' % mdPrefix
 
+    if maxRecNum == 0:
+        maxRecNum += 1;
+
     hasToken = True
     curResToken = ''
     recordCount = 0
+    fileNum = 0
+    curFileRecNum = 0
+
+    ofile = provideFileHandle(targetDir, fileNum, outFileName)
+    ofile.write("<{}>\n".format(rootNode))
 
     while hasToken:
         resToken = ''
@@ -241,14 +264,40 @@ if __name__ == "__main__":
             curResToken = resToken
 
         for rec in records:
+            if curFileRecNum == maxRecNum:
+                ofile.write("</{}>".format(rootNode))
+                ofile.close()
+                
+                logging.info("wrote {:d} records to {}/{:d}_{}".format(
+                curFileRecNum,
+                targetDir,
+                fileNum,
+                outFileName,
+                ))
+                
+                curFileRecNum = 0
+                fileNum += 1
+                
+                ofile = provideFileHandle(targetDir, fileNum, outFileName)
+                ofile.write("<{}>\n".format(rootNode))
+
             ofile.write(etree.tostring(rec, encoding='unicode'))
             recordCount += 1
+            curFileRecNum += 1
 
-    ofile.write('</repository>\n'), ofile.close()
+    ofile.write("</{}>".format(rootNode))
+    ofile.close()
+
+    logging.info("wrote {:d} records to {}/{:d}_{}".format(
+        curFileRecNum,
+        targetDir,
+        fileNum,
+        outFileName,
+    ))
 
     logging.info("Read {:d} bytes ({:.2f} compression)".format(
         nDataBytes,
         (float(nDataBytes)/nRawBytes),
     ))
 
-    logging.info("Wrote out {:d} records".format(recordCount))
+    logging.info("wrote out {:d} records".format(recordCount))
