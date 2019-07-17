@@ -6,24 +6,18 @@ Simple command line oai-pmh harvester written in Python.
 Usage
 -----
 
-Harvest a repository to a file named untsw.dc.xml
-
 ```
-python pyoaiharvest.py -uri http://digital.library.unt.edu/explore/collections/UNTSW/oai/ -o untsw.dc.xml
-```
-
-Harvest the untl metadata format to a file named untsw.untl.xml
-
-```
-python pyoaiharvest.py -uri http://digital.library.unt.edu/explore/collections/UNTSW/oai/ -o untsw.untl.xml -m untl
+python pyoaiharvest.py -uri 'http://oai.base-search.net/oai' \
+-dir ./download \
+-fn test_out.xml \
+-max 10 \
+-m 'base_dc' \
+-s 'collection:ftjcie+(autoclasscode:(791 OR 659 OR 070 OR 175 OR 302 OR 770 OR 384 OR 002 OR 370))' \
+--lexBASE
 ```
 
 Options
 -----  
-
-**-f**  
-**--from**  
-&nbsp;&nbsp;&nbsp;&nbsp; harvest records from this date, format: yyyy-mm-dd  
 
 **-uri**  
 **--baseURI**  
@@ -33,6 +27,10 @@ Options
 **--targetDir**  
 &nbsp;&nbsp;&nbsp;&nbsp; target dir
 
+**-fn**  
+**--fileBaseName**  
+&nbsp;&nbsp;&nbsp;&nbsp; base name of the target files 
+
 **-max**  
 **--maxRecNum**  
 &nbsp;&nbsp;&nbsp;&nbsp; max num of records per file
@@ -41,10 +39,6 @@ Options
 **--rootNode**  
 &nbsp;&nbsp;&nbsp;&nbsp; root node to wrap the harvested oai records
 
-**-fn**  
-**--fileBaseName**  
-&nbsp;&nbsp;&nbsp;&nbsp; base name of the target files 
-
 **-m**  
 **--mdprefix**  
 &nbsp;&nbsp;&nbsp;&nbsp; use the specified metadata format, default="oai_dc"   
@@ -52,6 +46,10 @@ Options
 **-s**  
 **--setName**  
 &nbsp;&nbsp;&nbsp;&nbsp; harvest the specified set  
+
+**-f**  
+**--from**  
+&nbsp;&nbsp;&nbsp;&nbsp; harvest records from this date, format: yyyy-mm-dd  
 
 **-u**  
 **--until**  
