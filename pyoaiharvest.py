@@ -228,14 +228,15 @@ if __name__ == "__main__":
                     serverString, 
                     "ListRecords&resumptionToken=%s" % curResToken, 
                     lexBASE)
-                curResToken = resToken
             except TypeError:
                 hasToken = False
                 pass
+            curResToken = resToken
         else:
             try:
                 records, resToken = getData(serverString, 'ListRecords' + verbOpts, lexBASE)
             except TypeError:
+                hasToken = False
                 pass
             curResToken = resToken
 
