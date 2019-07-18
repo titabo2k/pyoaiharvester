@@ -171,7 +171,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-rn", 
         "--rootNode", 
-        default="repository", 
+        default="root", 
         help="root node to wrap the harvested oai records",
     )
     parser.add_argument(
@@ -239,12 +239,10 @@ if __name__ == "__main__":
     fileNum = 0
     curFileRecNum = 0
 
-    ofile = provideFileHandle(targetDir, fileNum, outFileName)
-    ofile.write("<{}>\n".format(rootNode))
-
     while hasToken:
         resToken = ''
         records = ''
+
         if curResToken:
             try:
                 records, resToken = getData(
@@ -262,6 +260,10 @@ if __name__ == "__main__":
                 hasToken = False
                 pass
             curResToken = resToken
+
+        if (records and (curFileRecNum == 0)):
+            ofile = provideFileHandle(targetDir, fileNum, outFileName)
+            ofile.write("<{}>\n".format(rootNode))
 
         for rec in records:
             if curFileRecNum == maxRecNum:
