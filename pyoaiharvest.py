@@ -207,19 +207,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args:
-        serverString = args.baseURI
-        targetDir = args.targetDir
-        outFileName = args.fileBaseName
-        maxRecNum = args.maxRecNum
-        rootNode = args.rootNode
-        fromDate = args.fromDate
-        untilDate = args.until
-        mdPrefix = args.mdprefix
-        oaiSet = args.setName
-        lexBASE = args.lexBASE
-    else:
-        print(usage)
+    serverString = args.baseURI
+    targetDir = args.targetDir
+    outFileName = args.fileBaseName
+    maxRecNum = args.maxRecNum
+    rootNode = args.rootNode
+    fromDate = args.fromDate
+    untilDate = args.until
+    mdPrefix = args.mdprefix
+    oaiSet = args.setName
+    lexBASE = args.lexBASE
 
     verbOpts = ''
 
