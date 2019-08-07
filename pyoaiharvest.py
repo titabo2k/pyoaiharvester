@@ -233,7 +233,7 @@ if __name__ == "__main__":
         verbOpts += '&metadataPrefix=%s' % mdPrefix
 
     if maxRecNum == 0:
-        maxRecNum += 1;
+        maxRecNum += 1
 
     hasToken = True
     curResToken = ''
