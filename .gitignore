@@ -30,3 +30,6 @@ pip-log.txt
 .venv/*
 Pipfile
 Pipfile.lock
+
+# more to ignore
+_*
