@@ -29,6 +29,8 @@ def provideFileHandle(targetDir, fileNum, outFileName):
 
 
 def parseData(remoteAddr, remoteData, nameSpaces, xpaths):
+    remoteData = bytes(bytearray(remoteData, encoding='utf-8'))
+    
     doc = etree.XML(remoteData)
 
     oaiErrorCode = ''
