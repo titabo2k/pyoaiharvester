@@ -33,3 +33,4 @@ Pipfile.lock
 
 # more to ignore
 _*
+.vscode
