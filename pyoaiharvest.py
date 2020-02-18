@@ -27,8 +27,7 @@ def provideFileHandle(targetDir, fileNum, outFileName):
     outFile = None
 
     if gzipedOut:
-        _fullPath = "{}.gz".format(fullPath)
-        outFile = gzip.open(_fullPath,"wt")
+        outFile = gzip.open(fullPath,"wt")
     else:
         outFile = open(fullPath,"w")
 
@@ -245,6 +244,9 @@ if __name__ == "__main__":
 
     if maxRecNum == 0:
         maxRecNum += 1
+
+    if gzipedOut:
+        outFileName += ".gz"
 
     hasToken = True
     curResToken = ''
