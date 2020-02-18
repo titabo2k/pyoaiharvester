@@ -13,7 +13,8 @@ python pyoaiharvest.py -uri 'http://oai.base-search.net/oai' \
 -max 10 \
 -m 'base_dc' \
 -s 'collection:ftjcie+(autoclasscode:(791 OR 659 OR 070 OR 175 OR 302 OR 770 OR 384 OR 002 OR 370))' \
---lexBASE
+--lexBASE \
+-gz
 ```
 
 Options
@@ -57,3 +58,7 @@ Options
 
 **--lexBASE**
 &nbsp;&nbsp;&nbsp;&nbsp; base relatet url escaping for '=()&:+'
+
+**-gz**
+**--gzipedOut**
+&nbsp;&nbsp;&nbsp;&nbsp; provide gziped file as output
