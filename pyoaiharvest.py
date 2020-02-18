@@ -4,6 +4,7 @@ import zlib
 import time
 import argparse
 import logging
+import gzip
 from lxml import etree
 
 nDataBytes, nRawBytes, nRecoveries, maxRecoveries = 0, 0, 0, 3
@@ -23,7 +24,13 @@ xpaths = {
 def provideFileHandle(targetDir, fileNum, outFileName):
     fullPath = "{0}/{1}_{2}".format(targetDir, fileNum, outFileName)
 
-    outFile = open(fullPath,"w")
+    outFile = None
+
+    if gzipedOut:
+        _fullPath = "{}.gz".format(fullPath)
+        outFile = gzip.open(_fullPath,"wt")
+    else:
+        outFile = open(fullPath,"w")
 
     return outFile
 
@@ -204,6 +211,12 @@ if __name__ == "__main__":
         const='=()&:+',
         help="base relatet url escaping for '=()&:+'",
     )
+    parser.add_argument(
+        "-gz",
+        "--gzipedOut",
+        action='store_true',
+        help="provide gziped file as output",
+    )
 
     args = parser.parse_args()
 
@@ -217,6 +230,7 @@ if __name__ == "__main__":
     mdPrefix = args.mdprefix
     oaiSet = args.setName
     lexBASE = args.lexBASE
+    gzipedOut = args.gzipedOut
 
     verbOpts = ''
 
