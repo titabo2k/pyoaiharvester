@@ -7,7 +7,7 @@ import logging
 import gzip
 from lxml import etree
 
-nDataBytes, nRawBytes, nRecoveries, maxRecoveries = 0, 0, 0, 3
+nDataBytes, nRawBytes, nRecoveries, maxRecoveries, recoveryWait = 0, 0, 0, 30, 60
 
 nameSpaces = {
     'oai': 'http://www.openarchives.org/OAI/2.0/',
@@ -96,7 +96,7 @@ def parseData(remoteAddr, remoteData, nameSpaces, xpaths):
 
 
 def getData(serverString, command, lexBASE, verbose=1, sleepTime=0):
-    global nRecoveries, nDataBytes, nRawBytes
+    global nRecoveries, nDataBytes, nRawBytes, recoveryWait
     if sleepTime:
         time.sleep(sleepTime)
 
@@ -126,7 +126,9 @@ def getData(serverString, command, lexBASE, verbose=1, sleepTime=0):
         logging.warn("http error {0} occured".format(exValue))
         if nRecoveries < maxRecoveries:
             nRecoveries += 1
-            return getData(serverString, command, 1, 60)
+            logging.info("try {} of {} retries, waiting for {} sec".format(
+                nRecoveries, maxRecoveries, recoveryWait))
+            return getData(serverString, command, 1, recoveryWait)
         return
     
     nRawBytes += len(remoteData)
