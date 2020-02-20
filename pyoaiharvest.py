@@ -6,6 +6,7 @@ import argparse
 import logging
 import gzip
 from lxml import etree
+import http.client
 
 nDataBytes, nRawBytes, nRecoveries, maxRecoveries, recoveryWait = 0, 0, 0, 30, 60
 
@@ -36,8 +37,29 @@ def provideFileHandle(targetDir, fileNum, outFileName):
 
 def parseData(remoteAddr, remoteData, nameSpaces, xpaths):
     remoteData = bytes(bytearray(remoteData, encoding='utf-8'))
+
+    parser = None
+    doc = None
     
-    doc = etree.XML(remoteData)
+    try:
+        parser = etree.XMLParser(ns_clean=True)
+        doc = etree.XML(remoteData, parser=parser)
+    except etree.XMLSyntaxError as em:
+        logging.warn(("first attempt to parse the by {addr} provided xml failed, " + 
+            "error was:\n{error}\ndata was:\n{data}").format(
+                addr=remoteAddr,
+                error=em,
+                data=remoteData))
+        try:
+            parser = etree.XMLParser(ns_clean=True, recover=True)
+            doc = etree.XML(remoteData, parser=parser)
+        except etree.XMLSyntaxError as em:
+            logging.fatal(("failed to parse the by {addr} provided xml, " + 
+            "error was:\n{error}\ndata was:\n{data}").format(
+                addr=remoteAddr,
+                error=em,
+                data=remoteData))
+            raise em
 
     oaiErrorCode = ''
     oaiErrorVal = ''
@@ -116,7 +138,7 @@ def getData(serverString, command, lexBASE, verbose=1, sleepTime=0):
     try:
         with urllib.request.urlopen(remoteAddr) as resp:
             remoteData = str(resp.read().decode('utf-8'))
-    except urllib.request.HTTPError as exValue:
+    except (urllib.request.HTTPError, http.client.RemoteDisconnected) as exValue:
         if exValue.code == 503:
             retryWait = int(exValue.hdrs.get("Retry-After", "-1"))
             if retryWait < 0:
