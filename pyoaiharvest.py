@@ -59,7 +59,7 @@ def parseData(remoteAddr, remoteData, nameSpaces, xpaths):
                 addr=remoteAddr,
                 error=em,
                 data=remoteData))
-            raise em
+            return None
 
     oaiErrorCode = ''
     oaiErrorVal = ''
