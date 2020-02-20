@@ -144,13 +144,13 @@ def getData(serverString, command, lexBASE, verbose=1, sleepTime=0):
             if retryWait < 0:
                 return None
             logging.info("Waiting {:d} seconds".format(retryWait))
-            return getData(serverString, command, 0, retryWait)
+            return getData(serverString, command, lexBASE, 0, retryWait)
         logging.warn("http error {0} occured".format(exValue))
         if nRecoveries < maxRecoveries:
             nRecoveries += 1
             logging.info("try {} of {} retries, waiting for {} sec".format(
                 nRecoveries, maxRecoveries, recoveryWait))
-            return getData(serverString, command, 1, recoveryWait)
+            return getData(serverString, command, lexBASE, 1, recoveryWait)
         return
     
     nRawBytes += len(remoteData)
