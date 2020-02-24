@@ -139,13 +139,18 @@ def getData(serverString, command, lexBASE, verbose=1, sleepTime=0):
         with urllib.request.urlopen(remoteAddr) as resp:
             remoteData = str(resp.read().decode('utf-8'))
     except (urllib.request.HTTPError, http.client.RemoteDisconnected) as exValue:
-        if exValue.code == 503:
-            retryWait = int(exValue.hdrs.get("Retry-After", "-1"))
-            if retryWait < 0:
-                return None
-            logging.info("Waiting {:d} seconds".format(retryWait))
-            return getData(serverString, command, lexBASE, 0, retryWait)
-        logging.warn("http error {0} occured".format(exValue))
+        try:
+            if exValue.code == 503:
+                retryWait = int(exValue.hdrs.get("Retry-After", "-1"))
+                if retryWait < 0:
+                    return None
+                logging.info(("http error 503 occured, waiting " + 
+                    "{:d} seconds").format(retryWait))
+                return getData(serverString, command, lexBASE, 0, retryWait)
+        except AttributeError as er:
+            pass
+
+        logging.warn("http error occured:\n{0}".format(exValue))
         if nRecoveries < maxRecoveries:
             nRecoveries += 1
             logging.info("try {} of {} retries, waiting for {} sec".format(
