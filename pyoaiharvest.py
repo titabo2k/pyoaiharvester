@@ -138,7 +138,7 @@ def getData(serverString, command, lexBASE, verbose=1, sleepTime=0):
     try:
         with urllib.request.urlopen(remoteAddr) as resp:
             remoteData = str(resp.read().decode('utf-8'))
-    except (urllib.request.HTTPError, http.client.RemoteDisconnected) as exValue:
+    except (urllib.request.HTTPError, http.client.RemoteDisconnected, UnicodeDecodeError) as exValue:
         try:
             if exValue.code == 503:
                 retryWait = int(exValue.hdrs.get("Retry-After", "-1"))
