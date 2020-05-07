@@ -73,8 +73,7 @@ def parseData(remoteAddr, remoteData, nameSpaces, xpaths):
     
     if oaiErrorCode:
         oai_error_val_xpath = xpaths['oai_error_val_xpath'].format(
-            oaiErrorCode,
-        )
+            oaiErrorCode)
 
         try:
             oaiErrorVal = doc.xpath(
@@ -85,13 +84,7 @@ def parseData(remoteAddr, remoteData, nameSpaces, xpaths):
 
         logging.fatal("oai error {0}: {1}".format(
             oaiErrorCode,
-            oaiErrorVal,
-        ))
-
-        raise Exception("oai error {0}: {1}".format(
-            oaiErrorCode,
-            oaiErrorVal,
-        ))
+            oaiErrorVal))
 
     records = ''
     resToken = ''
