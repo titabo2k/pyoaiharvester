@@ -82,7 +82,7 @@ def parseData(remoteAddr, remoteData, nameSpaces, xpaths):
         except IndexError as noOAIErrorVal:
             pass
 
-        logging.fatal("oai error {0}: {1}".format(
+        logging.info("oai error {0}: {1}".format(
             oaiErrorCode,
             oaiErrorVal))
 
