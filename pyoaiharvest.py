@@ -36,30 +36,21 @@ def provideFileHandle(targetDir, fileNum, outFileName):
 
 
 def parseData(remoteAddr, remoteData, nameSpaces, xpaths):
-    remoteData = bytes(bytearray(remoteData, encoding='utf-8'))
+    remoteDataB = bytes(bytearray(remoteData, encoding='utf-8'))
 
     parser = None
     doc = None
     
     try:
-        parser = etree.XMLParser(ns_clean=True)
-        doc = etree.XML(remoteData, parser=parser)
-    except etree.XMLSyntaxError as em:
-        logging.warn(("first attempt to parse the by {addr} provided xml failed, " + 
-            "error was:\n{error}\ndata was:\n{data}").format(
-                addr=remoteAddr,
-                error=em,
-                data=remoteData))
-        try:
-            parser = etree.XMLParser(ns_clean=True, recover=True)
-            doc = etree.XML(remoteData, parser=parser)
-        except etree.XMLSyntaxError as em:
-            logging.fatal(("failed to parse the by {addr} provided xml, " + 
-            "error was:\n{error}\ndata was:\n{data}").format(
-                addr=remoteAddr,
-                error=em,
-                data=remoteData))
-            return None
+        parser = etree.XMLParser(ns_clean=True, recover=True)
+        doc = etree.XML(remoteDataB, parser=parser)
+    except Exception as em:
+        logging.fatal(("failed to parse the by {addr} provided xml, " + 
+        "error was:\n{error}\ndata was:\n{data}").format(
+            addr=remoteAddr,
+            error=em,
+            data=remoteData))
+        return None
 
     oaiErrorCode = ''
     oaiErrorVal = ''
@@ -124,6 +115,8 @@ def getData(serverString, command, lexBASE, verbose=1, sleepTime=0):
         )
 
     remoteAddr = serverString + '?verb=%s' % command
+
+    remoteData = None
     
     if verbose:
         logging.info("getData ...'{0}'".format(remoteAddr))
@@ -131,38 +124,29 @@ def getData(serverString, command, lexBASE, verbose=1, sleepTime=0):
     try:
         with urllib.request.urlopen(remoteAddr) as resp:
             remoteData = str(resp.read().decode('utf-8'))
-    except (urllib.request.HTTPError, http.client.RemoteDisconnected, UnicodeDecodeError) as exValue:
-        try:
-            if exValue.code == 503:
-                retryWait = int(exValue.hdrs.get("Retry-After", "-1"))
-                if retryWait < 0:
-                    return None
-                logging.info(("http error 503 occured, waiting " + 
-                    "{:d} seconds").format(retryWait))
-                return getData(serverString, command, lexBASE, 0, retryWait)
-        except AttributeError as er:
-            pass
-
+    except Exception as exValue:
         logging.warn("http error occured:\n{0}".format(exValue))
         if nRecoveries < maxRecoveries:
             nRecoveries += 1
             logging.info("try {} of {} retries, waiting for {} sec".format(
                 nRecoveries, maxRecoveries, recoveryWait))
-            return getData(serverString, command, lexBASE, 1, recoveryWait)
-        return
+            return getData(serverString, command, lexBASE, verbose=1, sleepTime=recoveryWait)
     
-    nRawBytes += len(remoteData)
-    
-    try:
-        remoteData = zlib.decompressobj().decompress(remoteData)
-    except:
-        pass
-    
-    nDataBytes += len(remoteData)
+    if remoteData is not None:
+        nRawBytes += len(remoteData)
+        
+        try:
+            remoteData = zlib.decompressobj().decompress(remoteData)
+        except:
+            pass
+        
+        nDataBytes += len(remoteData)
 
-    records, resToken = parseData(remoteAddr, remoteData, nameSpaces, xpaths)
+        records, resToken = parseData(remoteAddr, remoteData, nameSpaces, xpaths)
 
-    return records, resToken
+        return records, resToken
+    
+    logging.info("no response for {0}".format(remoteAddr))
 
 
 if __name__ == "__main__":
