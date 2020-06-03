@@ -133,20 +133,22 @@ def getData(serverString, command, lexBASE, verbose=1, sleepTime=0):
             return getData(serverString, command, lexBASE, verbose=1, sleepTime=recoveryWait)
     
     if remoteData is not None:
-        nRawBytes += len(remoteData)
-        
-        try:
-            remoteData = zlib.decompressobj().decompress(remoteData)
-        except:
-            pass
-        
-        nDataBytes += len(remoteData)
+        if len(remoteData) > 1: 
+            nRawBytes += len(remoteData)
+            
+            try:
+                remoteData = zlib.decompressobj().decompress(remoteData)
+            except:
+                pass
+            
+            nDataBytes += len(remoteData)
 
-        records, resToken = parseData(remoteAddr, remoteData, nameSpaces, xpaths)
+            records, resToken = parseData(remoteAddr, remoteData, nameSpaces, xpaths)
 
-        return records, resToken
+            return records, resToken
     
-    logging.info("no response for {0}".format(remoteAddr))
+    logging.info("no response for {0}, remoteData: {1}\nremoteDataLen: {2}".format(
+        remoteAddr, remoteData, len(remoteData)))
 
 
 if __name__ == "__main__":
